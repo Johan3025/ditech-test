@@ -9,6 +9,6 @@ namespace EnterpriseCQRS.Data.Model
     public class Hierarchy
     {
         public string Currency { get; set; }
-        public string Rate { get; set; }
+        public int Process { get; set; }
     }
 }

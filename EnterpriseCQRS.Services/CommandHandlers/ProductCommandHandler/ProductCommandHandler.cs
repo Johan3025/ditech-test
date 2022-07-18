@@ -36,6 +36,7 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
                 await _context.SaveChangesAsync(cancellationToken);
 
                 response.Message = "Guardado exitoso";
+                response.Result = responses.Result;
                 return response;
             }
         }
@@ -55,17 +56,18 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
                 var response = new GenericResponse<IList<Rates>>();
                 var rates = new Utilities<Rates>();
 
-                _context.Database.ExecuteSqlRaw("DELETE FROM [Transaction]");
+                _context.Database.ExecuteSqlRaw("DELETE FROM [Rates]");
                 var responses = await rates.test(url);
                 await _context.Rates.AddRangeAsync(responses.Result, cancellationToken);
                 await _context.SaveChangesAsync(cancellationToken);
 
                 response.Message = "Guardado exitoso";
+                response.Result = responses.Result;
                 return response;
             }
         }
 
-        public class CalculateTransactionCommandHandler : IRequestHandler<CalculateTransactionCommand, GenericResponse<IList<string>>>
+        public class CalculateTransactionCommandHandler : IRequestHandler<CalculateTransactionCommand, GenericResponse<IList<test>>>
         {
             private readonly CommittedCapacityContext _context;
 
@@ -74,93 +76,198 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
                 _context = context;
             }
 
-            public async Task<GenericResponse<IList<string>>> Handle(CalculateTransactionCommand request, CancellationToken cancellationToken)
+            public async Task<GenericResponse<IList<test>>> Handle(CalculateTransactionCommand request, CancellationToken cancellationToken)
             {
-
-                var response = new GenericResponse<IList<string>>();
-                var transactions = await _context.Transaction.Where(x => x.Sku.Equals("Y8417")).Take(12).ToListAsync();
+                var response = new GenericResponse<IList<test>>();
+                var transactions = await _context.Transaction.Where(x => x.Sku.Equals(request.Sku)).ToListAsync();
                 var rates = await _context.Rates.ToListAsync();
-                var lista = new List<string>();
+                var lista = new List<test>();
                 var rate = new List<Rates>();
                 double acumulador = default;
 
                 var listjerarquia = new List<Hierarchy>();
-
-                var hierarchyOne = new Hierarchy
+                var row = new Hierarchy
                 {
                     Currency = "EUR",
-                    Rate = "0"
+                    Process = 1
                 };
 
-                listjerarquia.Add(hierarchyOne);
+                listjerarquia.Add(row);
+                int contador = listjerarquia.Count();
 
-                var hierarchyTwo = new Hierarchy
+                for (int i = 0; i < contador; i++)
                 {
-                    Currency = rates.Where(x => x.From.Equals(listjerarquia[0].Currency)).Select(x => x.To).FirstOrDefault()
-                };
+                    var result = rates.Where(x => x.To.Equals(listjerarquia[i].Currency)).Select(x => x.From).ToList();
 
-                hierarchyTwo.Rate = rates.Where(x => x.From.Equals(hierarchyTwo.Currency) && x.To.Equals(listjerarquia[0].Currency)).Select(x => x.Rate).FirstOrDefault();
+                    if (result.Count > 0)
+                    {
+                        NewMethod(listjerarquia, result, listjerarquia[i].Process + 1);
+                    }
+                }
 
+                contador = listjerarquia.Count();
 
-                listjerarquia.Add(hierarchyTwo);
-
-                var hierarchyThree = new Hierarchy
+                for (int i = 1; i < contador; i++)
                 {
-                    Currency = rates.Where(x => x.From.Equals(listjerarquia[1].Currency) && !x.To.Equals(listjerarquia[0])).Select(x => x.To).FirstOrDefault()
-                };
+                    var result = rates.Where(x => x.To.Equals(listjerarquia[i].Currency)
+                                         && x.From != listjerarquia[0].Currency
+                                         && x.From != listjerarquia[1].Currency)
+                                        .Select(x => x.From)
+                                        .ToList();
+                    if (result.Count > 0)
+                    {
+                        NewMethod(listjerarquia, result, listjerarquia[i].Process + 1);
+                    }
+                }
 
-                hierarchyThree.Rate = rates.Where(x => x.From.Equals(hierarchyThree.Currency) && x.To.Equals(listjerarquia[1].Currency)).Select(x => x.Rate).FirstOrDefault();
 
-                listjerarquia.Add(hierarchyThree);
+                contador = listjerarquia.Count();
 
-                var hierarchyFour = new Hierarchy
+                for (int i = 2; i < contador; i++)
                 {
-                    Currency = rates.Where(x => x.From.Equals(listjerarquia[2].Currency) && !x.To.Equals(listjerarquia[1])).Select(x => x.To).FirstOrDefault()
-                };
+                    var result = rates.Where(x => x.To.Equals(listjerarquia[i].Currency)
+                                             && x.From != listjerarquia[0].Currency
+                                             && x.From != listjerarquia[1].Currency
+                                             && x.From != listjerarquia[2].Currency)
+                                            .Select(x => x.From)
+                                            .ToList();
 
-                hierarchyFour.Rate = rates.Where(x => x.From.Equals(hierarchyFour.Currency) && x.To.Equals(listjerarquia[2].Currency)).Select(x => x.Rate).FirstOrDefault();
+                    if (result.Count > 0)
+                    {
+                        NewMethod(listjerarquia, result, listjerarquia[i].Process + 1);
+                    }
+                }
 
-                listjerarquia.Add(hierarchyFour);
+                contador = listjerarquia.Count();
 
-                //listjerarquia.Add(rates.Where(x => x.From.Equals(listjerarquia[2]) && !x.To.Equals(listjerarquia[1])).Select(x => x.To).FirstOrDefault());
-                //listjerarquia.Add(rates.Where(x => x.From.Equals(listjerarquia[3]) && !x.To.Equals(listjerarquia[2])).Select(x => x.To).FirstOrDefault());
+                for (int i = 3; i < contador; i++)
+                {
+                    var result = rates.Where(x => x.To.Equals(listjerarquia[i].Currency)
+                                             && x.From != listjerarquia[0].Currency
+                                             && x.From != listjerarquia[1].Currency
+                                             && x.From != listjerarquia[2].Currency
+                                             && x.From != listjerarquia[3].Currency)
+                                            .Select(x => x.From)
+                                            .ToList();
 
+                    if (result.Count > 0)
+                    {
+                        NewMethod(listjerarquia, result, listjerarquia[i].Process + 1);
+                    }
+                }
 
                 foreach (var transaction in transactions)
                 {
-                    //if (transaction.Currency == listjerarquia[0])
-                    //{
-                    //    lista.Add(transaction.Amount);
-                    //    continue;
-                    //}
+                    var totales = new test();
 
-                    if (transaction.Currency == "AUD")
+                    if (transaction.Currency == listjerarquia[0].Currency)
                     {
-                        rate = rates.Where(x => x.From.Equals(transaction.Currency)).ToList();
-                        testing(lista, transaction, rate, acumulador);
+                        totales.Id = transaction.Id;
+                        totales.Sku = transaction.Sku;
+                        totales.Amount = transaction.Amount;
+                        totales.Currency = transaction.Currency;
+                        totales.CurrencyChange = transaction.Currency;
+                        totales.Convertion = Math.Round(decimal.Parse(transaction.Amount), 2, MidpointRounding.ToEven);
 
-                        rate = rates.Where(x => x.To.Equals(rate.FirstOrDefault().To)).ToList();
-                        testing(lista, transaction, rate, acumulador);
+                        lista.Add(totales);
+                        continue;
+                    }
+
+                    if (transaction.Currency == listjerarquia[1].Currency)
+                    {
+                        var operador = decimal.Parse(rates.Where(x => x.From == listjerarquia[1].Currency && x.To == listjerarquia[0].Currency).Select(x => x.Rate).FirstOrDefault());
+                        var resultado = decimal.Parse(transaction.Amount) * operador;
+                        totales.Id = transaction.Id;
+                        totales.Sku = transaction.Sku;
+                        totales.Amount = transaction.Amount;
+                        totales.Currency = transaction.Currency;
+                        totales.CurrencyChange = "EUR";
+                        totales.Convertion = Math.Round(resultado, 1, MidpointRounding.ToEven);
+
+                        lista.Add(totales);
+                        continue;
+                    }
+
+                    var count = listjerarquia.Where(x => x.Process == 2).Count();
+
+                    if (count > 1)
+                    {
+                        var listacurrency = listjerarquia.Where(x => x.Process == 2).Select(x => x.Currency).ToList();
+
+                        if (transaction.Currency == listacurrency[0] || transaction.Currency == listacurrency[1])
+                        {
+                            if (transaction.Currency == listjerarquia[2].Currency)
+                            {
+                                var operador = decimal.Parse(rates.Where(x => x.From == listjerarquia[2].Currency && x.To == listjerarquia[0].Currency).Select(x => x.Rate).FirstOrDefault());
+                                var resultado = decimal.Parse(transaction.Amount) * operador;
+                                totales.Id = transaction.Id;
+                                totales.Sku = transaction.Sku;
+                                totales.Amount = transaction.Amount;
+                                totales.Currency = transaction.Currency;
+                                totales.CurrencyChange = "EUR";
+                                totales.Convertion = Math.Round(resultado, 1, MidpointRounding.ToEven);
+
+                                lista.Add(totales);
+                                continue;
+                            }
+                        } 
+                    }
+
+                    if (transaction.Currency == listjerarquia[2].Currency)
+                    {
+                        var listaOperador = new List<decimal>();
+                        listaOperador.Add(decimal.Parse(rates.Where(x => x.From == listjerarquia[2].Currency && x.To == listjerarquia[1].Currency).Select(x => x.Rate).FirstOrDefault()));
+                        listaOperador.Add(decimal.Parse(rates.Where(x => x.From == listjerarquia[1].Currency && x.To == listjerarquia[0].Currency).Select(x => x.Rate).FirstOrDefault()));
+                        var resultado = decimal.Parse(transaction.Amount) * listaOperador[0];
+                        resultado *= listaOperador[1];
+                        totales.Id = transaction.Id;
+                        totales.Sku = transaction.Sku;
+                        totales.Amount = transaction.Amount;
+                        totales.Currency = transaction.Currency;
+                        totales.CurrencyChange = "EUR";
+                        totales.Convertion = Math.Round(resultado, 1, MidpointRounding.ToEven);
+
+                        lista.Add(totales);
+                        continue;
+                    }
+
+                    if (transaction.Currency == listjerarquia[3].Currency)
+                    {
+                        var listaOperador = new List<decimal>();
+                        listaOperador.Add(decimal.Parse(rates.Where(x => x.From == listjerarquia[2].Currency && x.To == listjerarquia[1].Currency).Select(x => x.Rate).FirstOrDefault()));
+                        listaOperador.Add(decimal.Parse(rates.Where(x => x.From == listjerarquia[1].Currency && x.To == listjerarquia[0].Currency).Select(x => x.Rate).FirstOrDefault()));
+                        listaOperador.Add(decimal.Parse(rates.Where(x => x.From == listjerarquia[3].Currency && x.To == listjerarquia[2].Currency).Select(x => x.Rate).FirstOrDefault()));
+                        var resultado = decimal.Parse(transaction.Amount) * listaOperador[0];
+                        resultado *= listaOperador[1]; 
+                        resultado *= listaOperador[2];
+                        totales.Id = transaction.Id;
+                        totales.Sku = transaction.Sku;
+                        totales.Amount = transaction.Amount;
+                        totales.Currency = transaction.Currency;
+                        totales.CurrencyChange = "EUR";
+                        totales.Convertion = Math.Round(resultado, 1, MidpointRounding.ToEven);
+
+                        lista.Add(totales);
+                        continue;
                     }
                 }
 
                 response.Message = "Guardado exitoso";
+                response.Result = lista;
                 return response;
             }
 
-            private void testing(List<string> lista, Transaction transaction, List<Rates> rate, double acumulador)
+            private static void NewMethod(List<Hierarchy> listjerarquia, List<string> second, int process)
             {
-                foreach (var item in rate)
+                foreach (var item in second)
                 {
-                    if (item.To == "EUR")
+                    var row = new Hierarchy
                     {
-                        lista.Add((int.Parse(transaction.Amount) * int.Parse(item.Rate)).ToString());
+                        Currency = item,
+                        Process = process
+                    };
 
-                    }
-                    else
-                    {
-                        acumulador += double.Parse(item.Rate);
-                    }
+                    listjerarquia.Add(row);
                 }
             }
         }
