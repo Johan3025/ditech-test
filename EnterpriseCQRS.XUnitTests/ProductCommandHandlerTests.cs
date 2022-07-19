@@ -50,6 +50,7 @@ namespace EnterpriseCQRS.XUnitTests
 
             var resultResponseMessage = "Guardado exitoso";
 
+
             GenericResponse<IList<Rates>> responses = await handle.Handle(request, new CancellationToken());
 
             Assert.Equal(resultResponseMessage, responses.Message);
