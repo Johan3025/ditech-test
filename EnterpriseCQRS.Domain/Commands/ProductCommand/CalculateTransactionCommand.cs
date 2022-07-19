@@ -6,6 +6,6 @@ namespace EnterpriseCQRS.Domain.Commands.ProductCommand
 {
     public class CalculateTransactionCommand : BaseCommand<GenericResponse<IList<test>>>
     {
-        public string Sku { get; set; }
+        //public string Sku { get; set; }
     }
 }

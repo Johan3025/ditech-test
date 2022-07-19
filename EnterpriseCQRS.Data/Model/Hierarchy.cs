@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EnterpriseCQRS.Data.Model
+﻿namespace EnterpriseCQRS.Data.Model
 {
     public class Hierarchy
     {
         public string Currency { get; set; }
         public int Process { get; set; }
+        public string CurrencyLink { get; set; }
     }
 }
