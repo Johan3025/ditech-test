@@ -79,7 +79,7 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
             public async Task<GenericResponse<IList<test>>> Handle(CalculateTransactionCommand request, CancellationToken cancellationToken)
             {
                 var response = new GenericResponse<IList<test>>();
-                var transactions = await _context.Transaction.Where(x => x.Sku.Equals("C4740")).ToListAsync();
+                var transactions = await _context.Transaction.Where(x => x.Sku.Equals("M2896")).ToListAsync();
                 var rates = await _context.Rates.ToListAsync();
                 var lista = new List<test>();
                 var rate = new List<Rates>();
@@ -255,7 +255,6 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
                                                 Process = listjerarquia[i].Process + 1
                                             })
                                             .ToList();
-
                     }
 
                     if (i == 2)

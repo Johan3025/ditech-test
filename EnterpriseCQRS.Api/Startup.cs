@@ -25,8 +25,8 @@ namespace EnterpriseCQRS.Api
             services.AddControllers();
 
             services.AddDbContext<CommittedCapacityContext>(
-               //options => options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
-            options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+               options => options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+            //options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
             //Log.Information("Adding MediatR");
             services.AddMediatRConf();
