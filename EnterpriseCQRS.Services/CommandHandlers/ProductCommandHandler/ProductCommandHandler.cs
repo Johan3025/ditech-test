@@ -114,7 +114,7 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
             public async Task<GenericResponse<IList<test>>> Handle(CalculateTransactionCommand request, CancellationToken cancellationToken)
             {
                 var response = new GenericResponse<IList<test>>();
-                var transactions = await _context.Transaction.Where(x => x.Sku.Equals("M2896")).ToListAsync();
+                var transactions = await _context.Transaction.Where(x => x.Sku.Equals(request.Sku)).ToListAsync();
                 var rates = await _context.Rates.ToListAsync();
                 var lista = new List<test>();
                 var rate = new List<Rates>();
