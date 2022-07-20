@@ -53,7 +53,7 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
                 await _context.SaveChangesAsync(cancellationToken);
                 logger.LogWarning("termino proceso de  guardado de info en la tabla");
                 response.Message = "Guardado exitoso";
-                response.Result = responses.Result;
+                //response.Result = responses.Result;
 
                 return response;
             }
@@ -97,7 +97,7 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
                 logger.LogInformation("termino proceso de  guardado de info en la tabla");
 
                 response.Message = "Guardado exitoso";
-                response.Result = responses.Result;
+                //response.Result = responses.Result;
                 return response;
             }
         }
@@ -278,33 +278,49 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
                     var count = listjerarquia.Where(x => x.Process == 2).Count();
                     var result = new List<Hierarchy>();
 
-                    if (i == 1)
+                    if (count > 1)
                     {
-                        result = rates.Where(x => x.To.Equals(listjerarquia[i].Currency)
-                                             && x.From != listjerarquia[0].Currency
-                                             && x.From != listjerarquia[2].Currency)
-                                            .Select(x => new Hierarchy
-                                            {
-                                                Currency = x.From,
-                                                CurrencyLink = x.To,
-                                                Process = listjerarquia[i].Process + 1
-                                            })
-                                            .ToList();
+                        if (i == 1)
+                        {
+                            result = rates.Where(x => x.To.Equals(listjerarquia[i].Currency)
+                                                 && x.From != listjerarquia[0].Currency
+                                                 && x.From != listjerarquia[2].Currency)
+                                                .Select(x => new Hierarchy
+                                                {
+                                                    Currency = x.From,
+                                                    CurrencyLink = x.To,
+                                                    Process = listjerarquia[i].Process + 1
+                                                })
+                                                .ToList();
+                        }
+
+                        if (i == 2)
+                        {
+                            result = rates.Where(x => x.To.Equals(listjerarquia[i].Currency)
+                                                 && x.From != listjerarquia[0].Currency
+                                                 && x.From != listjerarquia[1].Currency)
+                                                .Select(x => new Hierarchy
+                                                {
+                                                    Currency = x.From,
+                                                    CurrencyLink = x.To,
+                                                    Process = listjerarquia[i].Process + 1
+                                                })
+                                                .ToList();
+
+                        }
                     }
-
-                    if (i == 2)
+                    else
                     {
                         result = rates.Where(x => x.To.Equals(listjerarquia[i].Currency)
-                                             && x.From != listjerarquia[0].Currency
-                                             && x.From != listjerarquia[1].Currency)
-                                            .Select(x => new Hierarchy
-                                            {
-                                                Currency = x.From,
-                                                CurrencyLink = x.To,
-                                                Process = listjerarquia[i].Process + 1
-                                            })
-                                            .ToList();
-
+                                               && x.From != listjerarquia[0].Currency
+                                               && x.From != listjerarquia[1].Currency)
+                                              .Select(x => new Hierarchy
+                                              {
+                                                  Currency = x.From,
+                                                  CurrencyLink = x.To,
+                                                  Process = listjerarquia[i].Process + 1
+                                              })
+                                              .ToList();
                     }
 
 
