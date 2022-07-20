@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using EnterpriseCQRS.Api.Mediator;
+using Microsoft.Extensions.Logging;
 
 namespace EnterpriseCQRS.Api
 {
@@ -28,7 +29,6 @@ namespace EnterpriseCQRS.Api
                options => options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
             //options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-            //Log.Information("Adding MediatR");
             services.AddMediatRConf();
 
             services.AddSwaggerGen(c =>
@@ -38,8 +38,9 @@ namespace EnterpriseCQRS.Api
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -53,6 +54,7 @@ namespace EnterpriseCQRS.Api
 
             app.UseAuthorization();
 
+            loggerFactory.AddFile("Logs.txt");
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

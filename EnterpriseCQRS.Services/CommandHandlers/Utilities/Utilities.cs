@@ -10,7 +10,7 @@ namespace EnterpriseCQRS.Services.CommandHandlers.Utilities
 {
     public class Utilities<T> where T : class
     {
-        public async Task<GenericResponse<IList<T>>> test(Uri url)
+        public async Task<GenericResponse<IList<T>>> ExternalServiceUtility(Uri url)
         {
             var response = new GenericResponse<IList<T>>
             {
@@ -28,12 +28,24 @@ namespace EnterpriseCQRS.Services.CommandHandlers.Utilities
         {
             var response = await ConsumeServiceGetAsync(url).ConfigureAwait(false);
 
-            if (!string.IsNullOrEmpty(response))
+            try
             {
-                return JsonConvert.DeserializeObject<IList<T>>(response);
+                if (!string.IsNullOrEmpty(response))
+                {
+                    return JsonConvert.DeserializeObject<IList<T>>(response);
+                }
+            }
+            catch (Exception)
+            {
+                return null;
             }
 
             return null;
+        }
+
+        public class objeto
+        {
+            public string Error { get; set; }
         }
 
 

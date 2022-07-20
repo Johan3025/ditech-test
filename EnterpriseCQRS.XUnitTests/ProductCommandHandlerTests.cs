@@ -1,8 +1,7 @@
 using EnterpriseCQRS.Data;
-using EnterpriseCQRS.Data.Model;
 using EnterpriseCQRS.Domain.Commands.ProductCommand;
-using EnterpriseCQRS.Domain.Responses;
-using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
+using Moq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -13,22 +12,26 @@ namespace EnterpriseCQRS.XUnitTests
     public class ProductCommandHandlerTests : SqLiteDbFake
     {
         private readonly CommittedCapacityContext _context;
+        private readonly Mock<ILogger<GetTransactionCommandHandler>> _mockLogger;
+        private readonly Mock<ILogger<GetRateCommandHandler>> _mockRateLogger;
 
         public ProductCommandHandlerTests()
         {
             _context = GetDbContext();
+            _mockLogger = new Mock<ILogger<GetTransactionCommandHandler>>();
+            _mockRateLogger = new Mock<ILogger<GetRateCommandHandler>>();
         }
 
         [Fact]
         public async Task IsNotNullResponse_GetTransactions()
         {
-            GetTransactionCommand request = new GetTransactionCommand();
+            var request = new GetTransactionCommand();
 
-            GetTransactionCommandHandler handle = new GetTransactionCommandHandler(_context);
+            var handle = new GetTransactionCommandHandler(_context, _mockLogger.Object);
 
             var resultResponseMessage = "Guardado exitoso";
 
-            GenericResponse<IList<Transaction>> responses = await handle.Handle(request, new CancellationToken());
+            var responses = await handle.Handle(request, new CancellationToken());
 
             Assert.Contains(resultResponseMessage, responses.Message);
         }
@@ -36,13 +39,13 @@ namespace EnterpriseCQRS.XUnitTests
         [Fact]
         public async Task IsNotNullResponse_GetRates()
         {
-            GetRateCommand request = new GetRateCommand();
+            var request = new GetRateCommand();
 
-            GetRateCommandHandler handle = new GetRateCommandHandler(_context);
+            var handle = new GetRateCommandHandler(_context, _mockRateLogger.Object);
 
             var resultResponseMessage = "Guardado exitoso";
 
-            GenericResponse<IList<Rates>> responses = await handle.Handle(request, new CancellationToken());
+            var responses = await handle.Handle(request, new CancellationToken());
 
             Assert.Equal(resultResponseMessage, responses.Message);
         }
