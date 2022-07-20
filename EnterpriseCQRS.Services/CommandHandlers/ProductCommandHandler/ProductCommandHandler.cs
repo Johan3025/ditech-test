@@ -102,7 +102,7 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
             }
         }
 
-        public class CalculateTransactionCommandHandler : IRequestHandler<CalculateTransactionCommand, GenericResponse<IList<test>>>
+        public class CalculateTransactionCommandHandler : IRequestHandler<CalculateTransactionCommand, GenericResponse<IList<Marlupia>>>
         {
             private readonly CommittedCapacityContext _context;
 
@@ -111,12 +111,13 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
                 _context = context;
             }
 
-            public async Task<GenericResponse<IList<test>>> Handle(CalculateTransactionCommand request, CancellationToken cancellationToken)
+            public async Task<GenericResponse<IList<Marlupia>>> Handle(CalculateTransactionCommand request, CancellationToken cancellationToken)
             {
-                var response = new GenericResponse<IList<test>>();
+                var response = new GenericResponse<IList<Marlupia>>();
                 var transactions = await _context.Transaction.Where(x => x.Sku.Equals(request.Sku)).ToListAsync();
                 var rates = await _context.Rates.ToListAsync();
                 var lista = new List<test>();
+                var listafinal = new List<Marlupia>();
                 var rate = new List<Rates>();
                 decimal acumulador = default;
 
@@ -132,14 +133,16 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
 
                 CreateHierarchyList(rates, listjerarquia);
 
-                RetrieveTotals(transactions, rates, lista, listjerarquia, acumulador);
+                acumulador = RetrieveTotals(transactions, rates, lista, listjerarquia, acumulador);
 
+                var marlupia = new Marlupia { Totalesporsku = lista, TotalSkus = acumulador };
+                listafinal.Add(marlupia);
                 response.Message = "Guardado exitoso";
-                response.Result = lista;
+                response.Result = listafinal;
                 return response;
             }
 
-            private static void RetrieveTotals(List<Transaction> transactions, List<Rates> rates, List<test> lista, List<Hierarchy> listjerarquia, decimal acumulador)
+            private static decimal RetrieveTotals(List<Transaction> transactions, List<Rates> rates, List<test> lista, List<Hierarchy> listjerarquia, decimal acumulador)
             {
                 foreach (var transaction in transactions)
                 {
@@ -252,6 +255,8 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
                         continue;
                     }
                 }
+
+                return acumulador;
             }
 
             private static void CreateHierarchyList(List<Rates> rates, List<Hierarchy> listjerarquia)

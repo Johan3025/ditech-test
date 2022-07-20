@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace EnterpriseCQRS.Domain.Commands.ProductCommand
 {
-    public class CalculateTransactionCommand : BaseCommand<GenericResponse<IList<test>>>
+    public class CalculateTransactionCommand : BaseCommand<GenericResponse<IList<Marlupia>>>
     {
         public string Sku { get; set; }
     }

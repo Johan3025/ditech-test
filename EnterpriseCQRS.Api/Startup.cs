@@ -54,7 +54,7 @@ namespace EnterpriseCQRS.Api
 
             app.UseAuthorization();
 
-            loggerFactory.AddFile("Logs.txt");
+            loggerFactory.AddFile("Logs.log");
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
