@@ -2,6 +2,7 @@ using EnterpriseCQRS.Data;
 using EnterpriseCQRS.Data.Model;
 using EnterpriseCQRS.Domain.Commands.ProductCommand;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using EnterpriseCQRS.Domain.Responses;
 using System.Threading;
