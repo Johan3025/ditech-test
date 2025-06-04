@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EnterpriseCQRS.Services.CommandHandlers.Utilities
 {
-    public class Utilities<T> where T : class
+    public class Utilities<T> : IUtilities<T> where T : class
     {
         public async Task<GenericResponse<IList<T>>> ExternalServiceUtility(Uri url)
         {

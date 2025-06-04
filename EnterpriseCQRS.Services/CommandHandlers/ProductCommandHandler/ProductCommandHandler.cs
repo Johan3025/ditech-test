@@ -20,11 +20,13 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
         {
             private readonly CommittedCapacityContext _context;
             private readonly ILogger logger;
+            private readonly IUtilities<Transaction> _service;
 
-            public GetTransactionCommandHandler(CommittedCapacityContext context, ILogger<GetTransactionCommandHandler> logger)
+            public GetTransactionCommandHandler(CommittedCapacityContext context, ILogger<GetTransactionCommandHandler> logger, IUtilities<Transaction> service)
             {
                 _context = context;
                 this.logger = logger;
+                _service = service;
             }
 
             public async Task<GenericResponse<IList<Transaction>>> Handle(GetTransactionCommand request, CancellationToken cancellationToken)
@@ -32,14 +34,13 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
                 logger.LogInformation("comienza a ejecutar el handler");
                 var url = new Uri("http://quiet-stone-2094.herokuapp.com/transactions.json");
                 var response = new GenericResponse<IList<Transaction>>();
-                var transactions = new Utilities<Transaction>();
 
                 logger.LogWarning("se realiza proceso de eliminado de info de la tabla");
                 _context.Database.ExecuteSqlRaw("DELETE FROM [Transaction]");
                 logger.LogWarning("Termino el proceso de eliminado de info de la tabla");
 
                 logger.LogWarning("se realiza proceso de consumir servicio externo");
-                var responses = await transactions.ExternalServiceUtility(url);
+                var responses = await _service.ExternalServiceUtility(url);
                 logger.LogWarning("Termino el proceso de eliminado de info de la tabla");
 
                 if (responses.Result is null)
@@ -63,11 +64,13 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
         {
             private readonly CommittedCapacityContext _context;
             private readonly ILogger<GetRateCommandHandler> logger;
+            private readonly IUtilities<Rates> _service;
 
-            public GetRateCommandHandler(CommittedCapacityContext context, ILogger<GetRateCommandHandler> logger)
+            public GetRateCommandHandler(CommittedCapacityContext context, ILogger<GetRateCommandHandler> logger, IUtilities<Rates> service)
             {
                 _context = context;
                 this.logger = logger;
+                _service = service;
             }
 
             public async Task<GenericResponse<IList<Rates>>> Handle(GetRateCommand request, CancellationToken cancellationToken)
@@ -75,14 +78,13 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
                 logger.LogInformation("comienza a ejecutar el handler");
                 var url = new Uri("http://quiet-stone-2094.herokuapp.com/rates.json");
                 var response = new GenericResponse<IList<Rates>>();
-                var rates = new Utilities<Rates>();
 
                 logger.LogInformation("se realiza proceso de eliminado de info de la tabla");
                 _context.Database.ExecuteSqlRaw("DELETE FROM [Rates]");
                 logger.LogInformation("Termino el proceso de eliminado de info de la tabla");
 
                 logger.LogInformation("se realiza proceso de consumir servicio externo");
-                var responses = await rates.ExternalServiceUtility(url);
+                var responses = await _service.ExternalServiceUtility(url);
                 logger.LogInformation("Termino el proceso de eliminado de info de la tabla");
 
                 if (responses.Result is null)
