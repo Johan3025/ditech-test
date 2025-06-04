@@ -162,8 +162,10 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
 
                     if (transaction.Currency == HierarchyList[1].Currency)
                     {
-                        var operatorRate = decimal.Parse(rates.Where(x => x.From == HierarchyList[1].Currency && x.To == HierarchyList[0].Currency)
-                                       .Select(x => x.Rate).FirstOrDefault());
+                        if (!TryGetRate(rates, HierarchyList[1].Currency, HierarchyList[0].Currency, out var operatorRate))
+                        {
+                            continue;
+                        }
 
                         var result = decimal.Parse(transaction.Amount) * operatorRate;
                         totals.Id = transaction.Id;
@@ -187,7 +189,10 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
                         {
                             if (transaction.Currency == HierarchyList[2].Currency)
                             {
-                                var operatorRate = decimal.Parse(rates.Where(x => x.From == HierarchyList[2].Currency && x.To == HierarchyList[0].Currency).Select(x => x.Rate).FirstOrDefault());
+                                if (!TryGetRate(rates, HierarchyList[2].Currency, HierarchyList[0].Currency, out var operatorRate))
+                                {
+                                    continue;
+                                }
                                 var result = decimal.Parse(transaction.Amount) * operatorRate;
                                 totals.Id = transaction.Id;
                                 totals.Sku = transaction.Sku;
@@ -204,11 +209,17 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
 
                     if (transaction.Currency == HierarchyList[2].Currency)
                     {
-                        var operatorRateList = new List<decimal>
+                        var operatorRateList = new List<decimal>();
+                        if (!TryGetRate(rates, HierarchyList[2].Currency, HierarchyList[1].Currency, out var rate1))
                         {
-                            decimal.Parse(rates.Where(x => x.From == HierarchyList[2].Currency && x.To == HierarchyList[1].Currency).Select(x => x.Rate).FirstOrDefault()),
-                            decimal.Parse(rates.Where(x => x.From == HierarchyList[1].Currency && x.To == HierarchyList[0].Currency).Select(x => x.Rate).FirstOrDefault())
-                        };
+                            continue;
+                        }
+                        operatorRateList.Add(rate1);
+                        if (!TryGetRate(rates, HierarchyList[1].Currency, HierarchyList[0].Currency, out var rate2))
+                        {
+                            continue;
+                        }
+                        operatorRateList.Add(rate2);
 
                         var result = decimal.Parse(transaction.Amount) * operatorRateList[0];
                         result *= operatorRateList[1];
@@ -231,18 +242,38 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
 
                         if (currencylist > 1)
                         {
-                            operatorRateList.Add(decimal.Parse(rates.Where(x => x.From == HierarchyList[3].Currency && x.To == HierarchyList[3].CurrencyLink).Select(x => x.Rate).FirstOrDefault()));
+                            if (!TryGetRate(rates, HierarchyList[3].Currency, HierarchyList[3].CurrencyLink, out var rateA))
+                            {
+                                continue;
+                            }
                             var firstCondition = HierarchyList.Where(x => x.Currency == HierarchyList[3].CurrencyLink).Select(x => x.Currency).FirstOrDefault();
                             var secondCondition = HierarchyList.Where(x => x.Currency == HierarchyList[3].CurrencyLink).Select(x => x.CurrencyLink).FirstOrDefault();
-                            operatorRateList.Add(decimal.Parse(rates.Where(x => x.From == firstCondition && x.To == secondCondition).Select(x => x.Rate).FirstOrDefault()));
+                            if (!TryGetRate(rates, firstCondition, secondCondition, out var rateB))
+                            {
+                                continue;
+                            }
+                            operatorRateList.Add(rateA);
+                            operatorRateList.Add(rateB);
                             result = decimal.Parse(transaction.Amount) * operatorRateList[0];
                             result *= operatorRateList[1];
                         }
                         else
                         {
-                            operatorRateList.Add(decimal.Parse(rates.Where(x => x.From == HierarchyList[3].Currency && x.To == HierarchyList[2].Currency).Select(x => x.Rate).FirstOrDefault()));
-                            operatorRateList.Add(decimal.Parse(rates.Where(x => x.From == HierarchyList[2].Currency && x.To == HierarchyList[1].Currency).Select(x => x.Rate).FirstOrDefault()));
-                            operatorRateList.Add(decimal.Parse(rates.Where(x => x.From == HierarchyList[1].Currency && x.To == HierarchyList[0].Currency).Select(x => x.Rate).FirstOrDefault()));
+                            if (!TryGetRate(rates, HierarchyList[3].Currency, HierarchyList[2].Currency, out var rateA))
+                            {
+                                continue;
+                            }
+                            if (!TryGetRate(rates, HierarchyList[2].Currency, HierarchyList[1].Currency, out var rateB))
+                            {
+                                continue;
+                            }
+                            if (!TryGetRate(rates, HierarchyList[1].Currency, HierarchyList[0].Currency, out var rateC))
+                            {
+                                continue;
+                            }
+                            operatorRateList.Add(rateA);
+                            operatorRateList.Add(rateB);
+                            operatorRateList.Add(rateC);
                             result = decimal.Parse(transaction.Amount) * operatorRateList[0];
                             result *= operatorRateList[1];
                             result *= operatorRateList[2];
@@ -363,6 +394,19 @@ namespace EnterpriseCQRS.Services.CommandHandlers.ProductCommandHandler
                         AddValuesHierarchyData(hierarchyList, result);
                     }
                 }
+            }
+
+            private static bool TryGetRate(List<Rates> rates, string from, string to, out decimal rateValue)
+            {
+                rateValue = default;
+                var rateString = rates.FirstOrDefault(x => x.From == from && x.To == to)?.Rate;
+                if (!decimal.TryParse(rateString, out rateValue))
+                {
+                    Console.WriteLine($"Unable to parse rate from {from} to {to}. Value: '{rateString}'");
+                    return false;
+                }
+
+                return true;
             }
 
             private static void AddValuesHierarchyData(List<Hierarchy> hierarchyList, List<Hierarchy> Results)
